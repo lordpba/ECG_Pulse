@@ -1,0 +1,17 @@
+# Configuration file for HF Spaces deployment
+
+# Hardware recommendations
+# - CPU basic: May not work due to model size
+# - T4 small: Recommended minimum for PULSE-7B
+# - A10G small: Better performance
+# - A100: Best performance
+
+# Environment variables (if needed)
+# TRANSFORMERS_CACHE=/tmp/transformers_cache
+# HF_HOME=/tmp/hf_home
+
+# Notes for deployment:
+# 1. Make sure to select T4 small or better GPU
+# 2. The model will download on first run (~14GB)
+# 3. First inference may take longer due to model loading
+# 4. Consider adding authentication if needed for private use

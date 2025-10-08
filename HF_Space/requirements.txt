@@ -1,0 +1,12 @@
+gradio>=4.0.0
+torch>=2.0.0
+torchvision
+transformers>=4.37.0
+accelerate
+bitsandbytes
+sentencepiece
+protobuf
+Pillow
+numpy
+requests
+huggingface_hub
