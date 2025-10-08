@@ -258,5 +258,10 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
 # Launch app and configure environment at startup
 if __name__ == "__main__":
     setup_llava_environment()
-    demo.launch()
+    demo.launch(
+        share=True,           # 🌐 Crea link pubblico gradio.live
+        server_name="0.0.0.0",  # Accetta connessioni esterne
+        server_port=7860,       # Porta standard Gradio
+        debug=True              # Mostra info debug
+    )
 
