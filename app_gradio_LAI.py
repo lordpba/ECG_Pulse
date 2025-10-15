@@ -1,3 +1,5 @@
+################### THIS SCRIPT IS FOR RUNNING INTO LIGHTNING AI STUDIO ####################
+
 import gradio as gr
 import torch
 import warnings
