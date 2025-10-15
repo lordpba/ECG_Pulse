@@ -62,105 +62,92 @@ def analyze_ecg(image, custom_prompt):
     Takes an image and custom prompt as input and returns PULSE-7B model analysis using LLaVA.
     """
     if not llava_installed:
+        print("[LLaVA] Environment not configured.")
         return "Error: LLaVA environment has not been configured. Check the console."
-    
+
     if image is None:
+        print("[INPUT] No image uploaded.")
         return "Please upload an ECG image."
-    
+
     if not custom_prompt or custom_prompt.strip() == "":
+        print("[INPUT] No prompt provided.")
         return "Please enter a prompt for analysis."
-        
+
     try:
-        # Show memory info before loading
-        print("=== GPU Memory Information Before Loading ===")
+        print("[STEP] GPU Memory Info Before Loading Model:")
         get_gpu_memory_info()
-        
-        # Clear memory before starting
+
         clear_gpu_memory()
-        
-        # Save image to temporary file
+
         pil_image = Image.fromarray(image)
         with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp_file:
             pil_image.save(tmp_file.name)
             temp_image_path = tmp_file.name
-        
+        print(f"[INPUT] Image saved as: {temp_image_path}")
+
         try:
-            # Use LLaVA loading system specific for PULSE-7B
+            print("[STEP] Importing LLaVA modules...")
             from llava.model.builder import load_pretrained_model
             from llava.mm_utils import get_model_name_from_path, tokenizer_image_token, process_images
             from llava.utils import disable_torch_init
             from llava.constants import IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN
             from llava.conversation import conv_templates
             import torch
-            
-            print("Loading PULSE-ECG/PULSE-7B with LLaVA system...")
-            
-            # Disable torch initialization for efficiency
+
+            print("[STEP] Loading PULSE-ECG/PULSE-7B with LLaVA system...")
             disable_torch_init()
-            
-            # Get model name
             model_name = get_model_name_from_path(MODEL_ID)
-            
-            # Load model with quantization using BitsAndBytesConfig to avoid deprecation warning
+
             from transformers import BitsAndBytesConfig
-            
             quantization_config = BitsAndBytesConfig(
                 load_in_8bit=True,
                 llm_int8_threshold=6.0,
                 llm_int8_has_fp16_weight=False,
             )
-            
+
+            print("[STEP] Loading model...")
             tokenizer, model, image_processor, context_len = load_pretrained_model(
-                MODEL_ID, 
-                None,  # model_base
-                model_name, 
-                load_8bit=False,  # Disable here because we use quantization_config
+                MODEL_ID,
+                None,
+                model_name,
+                load_8bit=False,
                 load_4bit=False,
-                device_map="auto",  # Automatic distribution across multiple GPUs
+                device_map="auto",
                 device="cuda",
                 **{"quantization_config": quantization_config}
             )
-            
-            print(f"Model loaded: {model_name}")
-            print(f"Context length: {context_len}")
-            print(f"Image processor: {type(image_processor)}")
-            
-            # Verify that image processor is valid
+            print(f"[MODEL] Loaded: {model_name}")
+            print(f"[MODEL] Context length: {context_len}")
+            print(f"[MODEL] Image processor: {type(image_processor)}")
+
             if image_processor is None:
-                print("WARNING: image_processor is None, trying to load one manually...")
+                print("[WARNING] image_processor is None, loading manually...")
                 from transformers import CLIPImageProcessor
                 image_processor = CLIPImageProcessor.from_pretrained("openai/clip-vit-large-patch14-336")
-            
-            # Configure conversation for PULSE-7B (use llava_v1 as indicated)
-            if "pulse" in model_name.lower():
-                conv_mode = "llava_v1"
-            else:
-                conv_mode = "llava_v1"
-            
+
+            conv_mode = "llava_v1"
             conv = conv_templates[conv_mode].copy()
-            
-            # Use custom prompt from user
+
             query = custom_prompt.strip()
-            
-            # Add messages to conversation
+            print(f"[INPUT] Prompt: {query}")
+
             conv.append_message(conv.roles[0], DEFAULT_IMAGE_TOKEN + '\n' + query)
             conv.append_message(conv.roles[1], None)
             prompt = conv.get_prompt()
-            
-            print("=== GPU Memory Information After Loading ===")
+
+            print("[STEP] GPU Memory Info After Loading Model:")
             get_gpu_memory_info()
-            
-            # Prepare inputs using LLaVA system with error handling
+
             image_sizes = [pil_image.size]
             try:
+                print("[STEP] Processing image for model input...")
                 images_tensor = process_images(
                     [pil_image],
                     image_processor,
                     model.config
                 ).to(model.device, dtype=torch.float16)
             except AttributeError as attr_error:
-                print(f"Error in image processor: {attr_error}")
-                # Try alternative approach
+                print(f"[ERROR] Image processor: {attr_error}")
                 from torchvision import transforms
                 transform = transforms.Compose([
                     transforms.Resize((336, 336)),
@@ -173,51 +160,52 @@ def analyze_ecg(image, custom_prompt):
                 .unsqueeze(0)
                 .cuda()
             )
-            
-            print("Generating response...")
-            # Generate response with memory-optimized parameters
+
+            print("[STEP] Generating response...")
             with torch.inference_mode():
                 output_ids = model.generate(
                     input_ids,
                     images=images_tensor,
                     image_sizes=image_sizes,
                     do_sample=False,
-                    max_new_tokens=256,  # Reduce tokens to save memory
+                    max_new_tokens=256,
                     use_cache=True,
                 )
-            
+
             outputs = tokenizer.batch_decode(output_ids, skip_special_tokens=True)[0].strip()
-            
-            # Extract only the response (remove prompt from generation)
+            print(f"[OUTPUT] Raw model output: {outputs}")
+
             if prompt in outputs:
                 response = outputs.replace(prompt, "").strip()
             else:
                 response = outputs.strip()
-            
-            # Clean model from memory after use
+
+            print(f"[OUTPUT] Final response: {response}")
+
             del model
             clear_gpu_memory()
-                
+
+            print("[STEP] Analysis complete. Memory cleared.")
             return response if response else "Could not generate an analysis."
-            
+
         except torch.cuda.OutOfMemoryError as oom_error:
             clear_gpu_memory()
-            print(f"Out of Memory Error: {oom_error}")
+            print(f"[ERROR] Out of Memory: {oom_error}")
             return "Error: Insufficient GPU memory. Try restarting the application or use a smaller image."
-            
+
         except Exception as model_error:
             clear_gpu_memory()
-            print(f"Model error: {model_error}")
+            print(f"[ERROR] Model error: {model_error}")
             return f"An error occurred during analysis: {model_error}"
-        
+
         finally:
-            # Clean up temporary file
             if os.path.exists(temp_image_path):
+                print(f"[STEP] Removing temp image: {temp_image_path}")
                 os.unlink(temp_image_path)
-                
+
     except Exception as e:
         clear_gpu_memory()
-        print(f"Analysis error: {e}")
+        print(f"[ERROR] Analysis error: {e}")
         return f"An error occurred during analysis: {e}"
 
 # --- Gradio Interface Creation ---
