@@ -1,5 +1,7 @@
 # 🩺 ECG PULSE - Multimodal ECG Analysis with PULSE-7B
 
+![ECG PULSE Example](ECG-PULSE.png)
+
 A powerful web application for analyzing electrocardiogram (ECG) images using the PULSE-7B multimodal language model. This tool provides detailed medical insights from ECG images through an intuitive Gradio interface.
 
 ## ✨ Features
