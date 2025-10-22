@@ -57,6 +57,8 @@ A powerful web application for analyzing electrocardiogram (ECG) images using th
 
 ## 💻 Usage
 
+### Web Interface (Gradio)
+
 1. **Upload ECG Image**: Click on the "ECG Image" area to upload your electrocardiogram image
 2. **Customize Prompt** (Optional): Modify the analysis prompt to focus on specific aspects:
    - General analysis: "Provide a comprehensive ECG analysis including rhythm, rate, and abnormalities"
@@ -64,6 +66,28 @@ A powerful web application for analyzing electrocardiogram (ECG) images using th
    - Educational: "Explain this ECG for medical students with key teaching points"
 3. **Analyze**: Click the "Analyze ECG" button to get AI-powered insights
 4. **Review Results**: Read the detailed analysis in the results panel
+
+### REST API (FastAPI)
+
+For programmatic access and integration with other applications, use the REST API.
+
+**Quick Start:**
+```bash
+# Start the API server
+cd API
+python api.py
+
+# Test with an ECG image
+python test_api.py path/to/ecg.png
+```
+
+**For detailed API documentation, see [API/API_README.md](API/API_README.md)**
+
+The API provides:
+- `/analyze` - Single ECG image analysis
+- `/analyze-batch` - Multiple images analysis
+- `/health` - Service health check
+- Interactive documentation at http://localhost:8000/docs
 
 ## 🔧 Configuration
 
@@ -113,6 +137,11 @@ ECG_Pulse/
 ├── setup.sh              # Setup script
 ├── README.md             # This file
 ├── LICENSE               # MIT License
+├── API/                  # REST API (FastAPI)
+│   ├── api.py           # FastAPI server
+│   ├── test_api.py      # API test script
+│   ├── API_README.md    # API documentation
+│   └── __init__.py      # Package initialization
 └── LLaVA/                # LLaVA framework (local dependency)
 ```
 

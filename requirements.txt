@@ -3,3 +3,10 @@ torchvision
 transformers
 accelerate
 gradio
+fastapi
+uvicorn[standard]
+python-multipart
+Pillow
+bitsandbytes
+sentencepiece
+protobuf

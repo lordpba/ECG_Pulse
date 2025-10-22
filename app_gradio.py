@@ -13,6 +13,9 @@ warnings.filterwarnings("ignore")
 # --- CONFIGURATION ---
 # Global variables to keep model and processor in memory
 MODEL_ID = "PULSE-ECG/PULSE-7B"
+
+# Force execution on GPU 1 only
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 device = "cuda" if torch.cuda.is_available() else "cpu"
 llava_installed = False
 
