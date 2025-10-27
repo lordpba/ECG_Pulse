@@ -8,7 +8,7 @@ import sys
 import os
 
 # API Configuration
-API_URL = "http://localhost:8000"
+API_URL = "https://low-beaver-intelligence-canberra.trycloudflare.com"
 API_KEY = os.environ.get("API_KEY", None)  # Optional API key
 
 def test_health():
